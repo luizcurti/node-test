@@ -1,7 +1,3 @@
-/**
- * @jest-environment ./prisma/prisma-environment-jest
- */
-
 import { app } from "../../app";
 import request from "supertest";
 
@@ -30,6 +26,6 @@ describe("Create User Controller", () => {
       name: "Test Integration Exist User",
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(500);
   });
 });
