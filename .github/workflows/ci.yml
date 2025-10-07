@@ -78,18 +78,13 @@ jobs:
         run: |
           echo 'DATABASE_URL="postgresql://user:password@localhost:5432/backend?schema="' > .env.test
       
-      - name: Run database migrations
-        run: npx prisma migrate reset --force
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/backend
-      
       - name: Generate Prisma client
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
       
       - name: Run integration tests
         run: npm run test:integration
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/backend
 
   # Build Job - Ensure TypeScript compilation works
   build:
@@ -155,18 +150,13 @@ jobs:
         run: |
           echo 'DATABASE_URL="postgresql://user:password@localhost:5432/backend?schema="' > .env.test
       
-      - name: Run database migrations
-        run: npx prisma migrate reset --force
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/backend
-      
       - name: Generate Prisma client
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
       
       - name: Run all tests with coverage
         run: npm run test:all:coverage
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/backend
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

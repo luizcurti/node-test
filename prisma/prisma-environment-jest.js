@@ -13,9 +13,24 @@ require("dotenv").config({
 class CustomEnvironment extends TestEnvironment {
   constructor(config) {
     super(config);
-    this.schema = `code_schema_${uuid()}`;
+    this.schema = `code_schema_${uuid().replace(/-/g, '_')}`;
     console.log("schema", this.schema);
-    this.connectionString = `${process.env.DATABASE_URL}${this.schema}`;
+    
+    // Get base URL from environment or use default
+    let baseUrl = process.env.DATABASE_URL;
+    if (!baseUrl) {
+      // Fallback for CI environment
+      baseUrl = "postgresql://user:password@localhost:5432/backend";
+    }
+    
+    // Build connection string properly
+    if (baseUrl.includes('?schema=')) {
+      this.connectionString = baseUrl.replace('?schema=', `?schema=${this.schema}`);
+    } else {
+      this.connectionString = `${baseUrl}?schema=${this.schema}`;
+    }
+    
+    console.log("connection string:", this.connectionString);
   }
 
   async setup() {
@@ -23,17 +38,18 @@ class CustomEnvironment extends TestEnvironment {
     this.global.process.env.DATABASE_URL = this.connectionString;
 
     try {
-      // Create schema and run migrations directly
+      // Connect to the base database to create schema
+      const baseUrl = process.env.DATABASE_URL.split('?')[0]; // Remove schema part
       const client = new Client({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: baseUrl,
       });
 
       await client.connect();
       await client.query(`CREATE SCHEMA IF NOT EXISTS "${this.schema}"`);
       await client.end();
 
-      // Generate Prisma client for the test schema
-      execSync(`${prismaCli} db push --skip-generate`, { 
+      // Use Prisma db push to create tables in the schema
+      execSync(`${prismaCli} db push --skip-generate --accept-data-loss`, { 
         stdio: 'pipe',
         timeout: 30000,
         env: { ...process.env, DATABASE_URL: this.connectionString }
@@ -45,13 +61,19 @@ class CustomEnvironment extends TestEnvironment {
   }
 
   async teardown() {
-    const client = new Client({
-      connectionString: this.connectionString,
-    });
+    try {
+      // Connect to base database to drop schema
+      const baseUrl = process.env.DATABASE_URL.split('?')[0]; // Remove schema part
+      const client = new Client({
+        connectionString: baseUrl,
+      });
 
-    await client.connect();
-    await client.query(`DROP SCHEMA IF EXISTS "${this.schema}" CASCADE`);
-    await client.end();
+      await client.connect();
+      await client.query(`DROP SCHEMA IF EXISTS "${this.schema}" CASCADE`);
+      await client.end();
+    } catch (error) {
+      console.error('Failed to cleanup test database:', error.message);
+    }
   }
 }
 
