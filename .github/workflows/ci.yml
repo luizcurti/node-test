@@ -1,0 +1,181 @@
+# Node.js CI Pipeline with PostgreSQL Integration Tests
+# Runs on main branch only with comprehensive testing
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual execution
+
+jobs:
+  # Unit Tests Job - Fast execution without external dependencies
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+      
+      - name: Run unit tests
+        run: npm run test:unit
+      
+      - name: Run unit tests with coverage
+        run: npm run test:unit:coverage
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-unit
+
+  # Integration Tests Job - With PostgreSQL service
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: backend
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup environment variables
+        run: |
+          echo 'DATABASE_URL="postgresql://user:password@localhost:5432/backend?schema="' > .env.test
+      
+      - name: Run database migrations
+        run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
+      
+      - name: Generate Prisma client
+        run: npx prisma generate
+      
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
+
+  # Build Job - Ensure TypeScript compilation works
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build TypeScript project
+        run: npm run build
+      
+      - name: Check if dist folder exists
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist folder not created"
+            exit 1
+          fi
+          echo "✅ Build successful: dist folder created"
+
+  # All Tests Job - Run everything together for final validation
+  all-tests:
+    name: All Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, build]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: backend
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup environment variables
+        run: |
+          echo 'DATABASE_URL="postgresql://user:password@localhost:5432/backend?schema="' > .env.test
+      
+      - name: Run database migrations
+        run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
+      
+      - name: Generate Prisma client
+        run: npx prisma generate
+      
+      - name: Run all tests with coverage
+        run: npm run test:all:coverage
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/backend
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: alltests
+          name: codecov-all
+

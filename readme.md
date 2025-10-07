@@ -1,21 +1,62 @@
 # Node.js Test Project
 
+[![CI](https://github.com/luizcurti/node-test/actions/workflows/ci.yml/badge.svg)](https://github.com/luizcurti/node-test/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/luizcurti/node-test/branch/main/graph/badge.svg)](https://codecov.io/gh/luizcurti/node-test)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
+
 A Node.js project with TypeScript, Express, Prisma, and comprehensive testing setup.
 
 ## 🚀 Quick Start
+
+### Option 1: Automated Setup (Recommended)
 
 ```bash
 # Install dependencies
 npm install
 
+# Run automated setup (starts Docker + migrations + build)
+./setup.sh
+```
+
+The setup script will:
+- ✅ Start Docker containers (PostgreSQL + Node.js app)
+- ✅ Wait for database to be ready
+- ✅ Run database migrations
+- ✅ Generate Prisma client
+- ✅ Build the TypeScript project
+
+### Option 2: Manual Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Start database
+npm run docker:up
+
+# Run migrations
+npm run prisma:migrate
+
+# Build project
+npm run build
+
 # Run development server
 npm run dev
+```
 
-# Run tests (unit tests only - no Docker required)
+### Option 3: Development Only (No Docker)
+
+```bash
+# Install dependencies
+npm install
+
+# Run unit tests (no database required)
 npm test
 
-# Run tests with coverage
-npm run test:coverage
+# Run development server (database features won't work)
+npm run dev
 ```
 
 ## 🧪 Testing Strategy
@@ -33,7 +74,42 @@ This project uses a **dual testing approach**:
 - 🔧 **Slower execution**
 - 🔧 **End-to-end testing**
 
-## 📋 Available Scripts
+## �️ Setup Script
+
+The `./setup.sh` script provides a one-command setup for the entire development environment:
+
+```bash
+./setup.sh
+```
+
+**What it does:**
+- 🔍 Checks if Docker is running
+- 🐳 Builds and starts Docker containers
+- ⏳ Waits for PostgreSQL to be healthy
+- 🔄 Runs database migrations
+- 🔧 Generates Prisma client
+- 🏗️ Builds TypeScript project
+- 📋 Shows available commands and running services
+
+**Requirements:**
+- Docker Desktop running
+- Node.js 22+ installed
+- npm dependencies installed (`npm install`)
+
+### Cleanup Script
+
+To stop all services and clean up Docker resources:
+
+```bash
+./cleanup.sh
+```
+
+**What it does:**
+- 🛑 Stops all Docker containers
+- 🧹 Removes orphaned containers and networks
+- 💾 Cleans up unused Docker volumes and images
+
+## �📋 Available Scripts
 
 ### Development
 ```bash
@@ -70,6 +146,12 @@ npm run prisma:studio      # Open Prisma Studio
 ```bash
 npm run docker:up          # Start PostgreSQL database
 npm run docker:down        # Stop all containers
+```
+
+### Setup Scripts
+```bash
+./setup.sh                 # Complete automated setup
+./cleanup.sh               # Stop services and cleanup
 ```
 
 ### Code Quality

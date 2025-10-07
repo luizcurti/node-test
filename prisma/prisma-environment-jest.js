@@ -18,12 +18,30 @@ class CustomEnvironment extends TestEnvironment {
     this.connectionString = `${process.env.DATABASE_URL}${this.schema}`;
   }
 
-  setup() {
+  async setup() {
     process.env.DATABASE_URL = this.connectionString;
     this.global.process.env.DATABASE_URL = this.connectionString;
 
-    // Run migrations
-    execSync(`${prismaCli} migrate dev`);
+    try {
+      // Create schema and run migrations directly
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+      });
+
+      await client.connect();
+      await client.query(`CREATE SCHEMA IF NOT EXISTS "${this.schema}"`);
+      await client.end();
+
+      // Generate Prisma client for the test schema
+      execSync(`${prismaCli} db push --skip-generate`, { 
+        stdio: 'pipe',
+        timeout: 30000,
+        env: { ...process.env, DATABASE_URL: this.connectionString }
+      });
+    } catch (error) {
+      console.error('Failed to setup test database:', error.message);
+      throw error;
+    }
   }
 
   async teardown() {

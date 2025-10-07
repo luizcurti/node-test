@@ -16,6 +16,9 @@ export default {
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
 
+  // Test timeout in milliseconds
+  testTimeout: 30000,
+
   // Indicates whether the coverage information should be collected while executing the test
   // collectCoverage: false,
 
