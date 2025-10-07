@@ -1,4 +1,4 @@
-const NodeEnvironment = require("jest-environment-node");
+const { TestEnvironment } = require("jest-environment-node");
 const { v4: uuid } = require("uuid");
 const { execSync } = require("child_process");
 const { resolve } = require("path");
@@ -10,11 +10,11 @@ require("dotenv").config({
   path: resolve(__dirname, "..", ".env.test"),
 });
 
-class CustomEnvironment extends NodeEnvironment {
+class CustomEnvironment extends TestEnvironment {
   constructor(config) {
     super(config);
     this.schema = `code_schema_${uuid()}`;
-    console.log("schemas", this.schema);
+    console.log("schema", this.schema);
     this.connectionString = `${process.env.DATABASE_URL}${this.schema}`;
   }
 
@@ -22,7 +22,7 @@ class CustomEnvironment extends NodeEnvironment {
     process.env.DATABASE_URL = this.connectionString;
     this.global.process.env.DATABASE_URL = this.connectionString;
 
-    // Rodar as migrations
+    // Run migrations
     execSync(`${prismaCli} migrate dev`);
   }
 

@@ -1,16 +1,41 @@
 services:
+  # PostgreSQL database
   db:
-    image: postgres:14
+    image: postgres:16
     container_name: backend_db
-    restart: always
+    restart: unless-stopped
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=backend
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: backend
     ports:
       - "5432:5432"
     volumes:
       - ./scripts:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d backend"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Node.js application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend_app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://user:password@db:5432/backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
 volumes:
   postgres_data:

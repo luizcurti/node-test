@@ -12,7 +12,7 @@ class User {
     });
   }
 
-  static create({ name, username, email }: User) {
+  static create({ name, username, email }: User): User {
     const user = new User({ username, name, email });
     return user;
   }

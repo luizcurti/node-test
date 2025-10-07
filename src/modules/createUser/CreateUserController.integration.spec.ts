@@ -5,7 +5,7 @@ describe("Create User Controller", () => {
   it("Should be able to create a new user", async () => {
     const response = await request(app).post("/users").send({
       username: "test-integration",
-      email: "testIntegration@test.com.br",
+      email: "testIntegration@test.com",
       name: "Test Integration",
     });
 
@@ -22,7 +22,7 @@ describe("Create User Controller", () => {
 
     const response = await request(app).post("/users").send({
       username: "test-integration-exist",
-      email: "testIntegrationExisting@test.com.br",
+      email: "testIntegrationExisting@test.com",
       name: "Test Integration Exist User",
     });
 
