@@ -51,5 +51,6 @@ temp/
 
 # Prisma
 .qodo
+
+# Lock files (keep package-lock.json for reproducible builds)
 yarn.lock
-package-lock.json
