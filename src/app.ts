@@ -1,4 +1,4 @@
-import express, { NextFunction, Response, Request } from "express";
+import express from "express";
 import { routes } from "./routes/routes";
 
 import "dotenv/config";

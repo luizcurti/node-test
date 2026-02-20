@@ -52,11 +52,11 @@ describe("CreateUserController - Unit Tests", () => {
     // Assert
     expect(mockCreateUserService.execute).toHaveBeenCalledWith(userData);
     expect(mockCreateUserService.execute).toHaveBeenCalledTimes(1);
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.status).toHaveBeenCalledWith(201);
     expect(mockResponse.json).toHaveBeenCalledWith(expectedUser);
   });
 
-  it("should return 500 when service throws an error", async () => {
+  it("should return 409 when service throws an AppError (e.g. user already exists)", async () => {
     // Arrange
     const userData = {
       name: "Test Name",
@@ -66,14 +66,16 @@ describe("CreateUserController - Unit Tests", () => {
     
     const errorMessage = "User already exists!";
     mockRequest.body = userData;
-    mockCreateUserService.execute.mockRejectedValue(new Error(errorMessage));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { AppError } = require("../../errors/AppError");
+    mockCreateUserService.execute.mockRejectedValue(new AppError(errorMessage, 409));
 
     // Act
     await createUserController.handle(mockRequest as Request, mockResponse as Response);
 
     // Assert
     expect(mockCreateUserService.execute).toHaveBeenCalledWith(userData);
-    expect(mockResponse.status).toHaveBeenCalledWith(500);
+    expect(mockResponse.status).toHaveBeenCalledWith(409);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: errorMessage });
   });
 

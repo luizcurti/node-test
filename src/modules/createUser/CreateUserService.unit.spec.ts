@@ -1,4 +1,5 @@
-import { User } from "../../entities/User";
+import { IUserProps } from "../../entities/User";
+import { AppError } from "../../errors/AppError";
 import { UsersRepositoryInMemory } from "../../repositories/in-memory/UsersRepositoryInMemory";
 import { IUsersRepository } from "../../repositories/IUsersRepositories";
 import { CreateUserService } from "./CreateUserService";
@@ -13,7 +14,7 @@ describe("Create user", () => {
   });
 
   it("should be able to create a new user", async () => {
-    const userData: User = {
+    const userData: IUserProps = {
       name: "Test Name",
       email: "test@test.com",
       username: "testusername",
@@ -26,7 +27,7 @@ describe("Create user", () => {
   });
 
   it("should not be able to create an existing user", async () => {
-    const userData: User = {
+    const userData: IUserProps = {
       name: "Test Existing Name",
       email: "testexisting@test.com",
       username: "testexisting",
@@ -35,7 +36,7 @@ describe("Create user", () => {
     await createUserService.execute(userData);
 
     await expect(createUserService.execute(userData)).rejects.toEqual(
-      new Error("User already exists!")
+      new AppError("User already exists!", 409)
     );
   });
 });

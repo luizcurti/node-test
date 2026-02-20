@@ -1,20 +1,15 @@
-import { User } from "../../entities/User";
+import { IUserProps, User } from "../../entities/User";
+import { AppError } from "../../errors/AppError";
 import { IUsersRepository } from "../../repositories/IUsersRepositories";
-
-interface IUserRequest {
-  name: string;
-  username: string;
-  email: string;
-}
 
 class CreateUserService {
   constructor(private usersRepository: IUsersRepository) {}
 
-  async execute({ email, username, name }: IUserRequest) {
+  async execute({ email, username, name }: IUserProps): Promise<User> {
     const userAlreadyExists = await this.usersRepository.exists(username);
 
     if (userAlreadyExists) {
-      throw new Error("User already exists!");
+      throw new AppError("User already exists!", 409);
     }
 
     const userCreate = User.create({ email, username, name });
