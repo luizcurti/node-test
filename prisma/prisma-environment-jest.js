@@ -23,12 +23,9 @@ class CustomEnvironment extends TestEnvironment {
       baseUrl = "postgresql://user:password@localhost:5432/backend";
     }
     
-    // Build connection string properly
-    if (baseUrl.includes('?schema=')) {
-      this.connectionString = baseUrl.replace('?schema=', `?schema=${this.schema}`);
-    } else {
-      this.connectionString = `${baseUrl}?schema=${this.schema}`;
-    }
+    // Build connection string: always strip any existing query params first
+    const cleanUrl = baseUrl.split('?')[0];
+    this.connectionString = `${cleanUrl}?schema=${this.schema}`;
     
     console.log("connection string:", this.connectionString);
   }
