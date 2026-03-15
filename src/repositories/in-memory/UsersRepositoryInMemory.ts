@@ -23,6 +23,10 @@ class UsersRepositoryInMemory implements IUsersRepository {
     return this.users.find((u) => u.id === id) ?? null;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.users.find((u) => u.email === email) ?? null;
+  }
+
   async update(id: string, data: IUserUpdateProps): Promise<User> {
     const index = this.users.findIndex((u) => u.id === id);
     Object.assign(this.users[index], data);

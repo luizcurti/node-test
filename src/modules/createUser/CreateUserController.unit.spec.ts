@@ -97,4 +97,19 @@ describe("CreateUserController - Unit Tests", () => {
     expect(mockResponse.status).toHaveBeenCalledWith(500);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: "Unknown error" });
   });
+
+  it("should return 422 when body fails Joi validation", async () => {
+    // Arrange — missing required fields (name, email, username all absent)
+    mockRequest.body = { username: "ab" }; // username too short (min 3) and missing name + email
+
+    // Act
+    await createUserController.handle(mockRequest as Request, mockResponse as Response);
+
+    // Assert
+    expect(mockCreateUserService.execute).not.toHaveBeenCalled();
+    expect(mockResponse.status).toHaveBeenCalledWith(422);
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: "Validation error", details: expect.any(Array) })
+    );
+  });
 });

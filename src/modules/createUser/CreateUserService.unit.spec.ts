@@ -26,7 +26,7 @@ describe("Create user", () => {
     expect(user.username).toBe("testusername");
   });
 
-  it("should not be able to create an existing user", async () => {
+  it("should not be able to create an existing user (duplicate username)", async () => {
     const userData: IUserProps = {
       name: "Test Existing Name",
       email: "testexisting@test.com",
@@ -38,5 +38,21 @@ describe("Create user", () => {
     await expect(createUserService.execute(userData)).rejects.toEqual(
       new AppError("User already exists!", 409)
     );
+  });
+
+  it("should not be able to create user with duplicate email", async () => {
+    await createUserService.execute({
+      name: "First User",
+      email: "shared@email.com",
+      username: "firstuser",
+    });
+
+    await expect(
+      createUserService.execute({
+        name: "Second User",
+        email: "shared@email.com",
+        username: "seconduser",
+      })
+    ).rejects.toEqual(new AppError("User already exists!", 409));
   });
 });

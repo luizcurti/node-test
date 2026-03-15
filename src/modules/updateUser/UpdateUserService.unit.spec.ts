@@ -42,4 +42,20 @@ describe("UpdateUserService", () => {
       updateUserService.execute(bob.id as string, { username: "alice" })
     ).rejects.toEqual(new AppError("Username already in use", 409));
   });
+
+  it("should update only the email", async () => {
+    const created = await createUserService.execute({
+      name: "Alice",
+      username: "alice",
+      email: "alice@test.com",
+    });
+
+    const updated = await updateUserService.execute(created.id as string, {
+      email: "alice@updated.com",
+    });
+
+    expect(updated.email).toBe("alice@updated.com");
+    expect(updated.name).toBe("Alice");
+    expect(updated.username).toBe("alice");
+  });
 });

@@ -5,6 +5,7 @@ interface IUsersRepository {
   exists(username: string): Promise<boolean>;
   findAll(): Promise<User[]>;
   findById(id: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
   update(id: string, data: IUserUpdateProps): Promise<User>;
   delete(id: string): Promise<void>;
 }

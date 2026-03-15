@@ -37,4 +37,40 @@ describe("Update User Controller", () => {
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("error", "User not found");
   });
+
+  it("Should return 409 when new username is already in use", async () => {
+    await request(app).post("/users").send({
+      username: "existingusername409",
+      email: "existing409@test.com",
+      name: "Existing User",
+    });
+    const target = await request(app).post("/users").send({
+      username: "targetuser409",
+      email: "target409@test.com",
+      name: "Target User",
+    });
+
+    const response = await request(app)
+      .put(`/users/${target.body.id}`)
+      .send({ username: "existingusername409" });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toHaveProperty("error", "Username already in use");
+  });
+
+  it("Should update only the email field", async () => {
+    const created = await request(app).post("/users").send({
+      username: "emailupdateuser",
+      email: "oldemail@test.com",
+      name: "Email Update User",
+    });
+
+    const response = await request(app)
+      .put(`/users/${created.body.id}`)
+      .send({ email: "newemail@test.com" });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("email", "newemail@test.com");
+    expect(response.body).toHaveProperty("username", "emailupdateuser");
+  });
 });
